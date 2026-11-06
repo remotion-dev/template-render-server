@@ -1,13 +1,13 @@
 import { Composition } from "remotion";
 import { HelloWorld, helloWorldCompSchema } from "./HelloWorld";
 import {
-  ScienceStick,
   calculateScienceMetadata,
   type ScienceStickProps,
 } from "./ScienceStick";
+import { ScienceWorld } from "./ScienceWorld";
 
 const scienceDefaults: ScienceStickProps = {
-  title: "Science Short",
+  title: "Science Explainer",
   music: "mysterious",
   scenes: [
     {
@@ -22,22 +22,16 @@ const scienceDefaults: ScienceStickProps = {
   ],
 };
 
-// Each <Composition> is an entry in the sidebar!
-
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        // You can take the "id" to render a video:
-        // npx remotion render HelloWorld
         id="HelloWorld"
         component={HelloWorld}
         durationInFrames={800}
         fps={30}
         width={1920}
         height={1080}
-        // You can override these props for each render:
-        // https://www.remotion.dev/docs/parametrized-rendering
         schema={helloWorldCompSchema}
         defaultProps={{
           titleText: "Render Server Template",
@@ -46,9 +40,10 @@ export const RemotionRoot: React.FC = () => {
           logoColor2: "#86A8E7",
         }}
       />
+      {/* Keep the existing composition ID and input schema so n8n requests remain compatible. */}
       <Composition
         id="ScienceStick"
-        component={ScienceStick}
+        component={ScienceWorld}
         durationInFrames={900}
         fps={30}
         width={1080}
