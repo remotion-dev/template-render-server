@@ -3,21 +3,24 @@
   "version": "1.0.0",
   "description": "My Remotion video",
   "scripts": {
-    "build": "remotion bundle",
+    "audio": "node generate-audio.mjs",
+    "build": "node generate-audio.mjs && remotion bundle",
     "dev": "tsx watch server",
     "start": "tsx server",
     "lint": "eslint . && tsc",
     "remotion:upgrade": "remotion upgrade",
-    "remotion:studio": "remotion studio"
+    "remotion:studio": "node generate-audio.mjs && remotion studio"
   },
   "repository": {},
   "license": "UNLICENSED",
   "dependencies": {
     "@remotion/bundler": "^4.0.0",
     "@remotion/cli": "^4.0.0",
+    "@remotion/media-utils": "^4.0.0",
     "@remotion/renderer": "^4.0.0",
     "@remotion/zod-types": "^4.0.0",
     "express": "5.1.0",
+    "msedge-tts": "^2.1.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remotion": "^4.0.0",

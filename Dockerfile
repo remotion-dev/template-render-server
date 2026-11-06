@@ -30,7 +30,8 @@ RUN mkdir -p renders
 # Install browser
 RUN npx remotion browser ensure
 
-# Bundle the Remotion composition
+# Generate the music + sound effects (public/audio), then bundle the Remotion composition
+RUN node generate-audio.mjs
 RUN npx remotion bundle
 # By default, bundle command will create "build" directory with the bundle
 ENV REMOTION_SERVE_URL=build

@@ -7,7 +7,8 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 interface JobData {
-  titleText: string;
+  compositionId: string;
+  inputProps: Record<string, unknown>;
 }
 
 type JobState =
@@ -33,14 +34,14 @@ type JobState =
       data: JobData;
     };
 
-const compositionId = "HelloWorld";
-
 export const makeRenderQueue = ({
   port,
+  publicUrl,
   serveUrl,
   rendersDir,
 }: {
   port: number;
+  publicUrl?: string;
   serveUrl: string;
   rendersDir: string;
 }) => {
@@ -63,9 +64,7 @@ export const makeRenderQueue = ({
     });
 
     try {
-      const inputProps = {
-        titleText: job.data.titleText,
-      };
+      const { compositionId, inputProps } = job.data;
 
       const composition = await selectComposition({
         serveUrl,
@@ -93,7 +92,7 @@ export const makeRenderQueue = ({
 
       jobs.set(jobId, {
         status: "completed",
-        videoUrl: `http://localhost:${port}/renders/${jobId}.mp4`,
+        videoUrl: `${(publicUrl ?? `http://localhost:${port}`).replace(/\/+$/, "")}/renders/${jobId}.mp4`,
         data: job.data,
       });
     } catch (error) {
