@@ -8,7 +8,8 @@
 //                            registerTts(app);        // before app.listen(...)
 //
 // POST /tts  {"text": "...", "voice": "en-US-AndrewNeural"}
-//   -> {"path": "/voice/<id>.mp3"}   (the file is served from GET /voice/<id>.mp3)
+//   -> {"path": "/voice/<id>.mp3", "dataUrl": "data:audio/mpeg;base64,..."}
+//   (the file is also served from GET /voice/<id>.mp3)
 //
 // Note: this is Microsoft's unofficial, free endpoint. It works without a key but
 // has no SLA and could change, so keep the voice generation behind this one route
@@ -93,7 +94,11 @@ export function registerTts(app: Express) {
       await enqueue(() => synth(text, voice, file));
       const size = fs.statSync(file).size;
       if (size < 1000) throw new Error('empty audio returned');
-      return res.json({path: `/voice/${id}.mp3`});
+      // Also return the clip itself as a data URL. On hosts whose disk is not shared
+      // between requests (Vercel, serverless), the render can then read the audio from
+      // its own request instead of fetching /voice/<id>.mp3 from another instance.
+      const dataUrl = 'data:audio/mpeg;base64,' + fs.readFileSync(file).toString('base64');
+      return res.json({path: `/voice/${id}.mp3`, dataUrl});
     } catch (e) {
       try {
         fs.unlinkSync(file);

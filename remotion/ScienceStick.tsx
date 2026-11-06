@@ -474,12 +474,15 @@ export const ScienceStick: React.FC<ScienceStickProps> = ({scenes, music}) => {
         <Audio
           src={staticFile(`audio/music_${music}.wav`)}
           loop
-          volume={(f) =>
-            interpolate(f, [0, fps, durationInFrames - fps * 2, durationInFrames], [0, 0.14, 0.14, 0], {
+          volume={(f) => {
+            // keep the input range strictly increasing even for very short videos
+            const fadeIn = Math.min(fps, durationInFrames / 4);
+            const fadeOutStart = Math.max(fadeIn + 1, durationInFrames - fps * 2);
+            return interpolate(f, [0, fadeIn, fadeOutStart, durationInFrames], [0, 0.14, 0.14, 0], {
               extrapolateLeft: 'clamp',
               extrapolateRight: 'clamp',
-            })
-          }
+            });
+          }}
         />
       ) : null}
     </AbsoluteFill>

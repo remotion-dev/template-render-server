@@ -318,10 +318,10 @@ index 40f33de..5c7aac7 100644
  };
 diff --git a/remotion/ScienceStick.tsx b/remotion/ScienceStick.tsx
 new file mode 100644
-index 0000000..d91a479
+index 0000000..12e0f4b
 --- /dev/null
 +++ b/remotion/ScienceStick.tsx
-@@ -0,0 +1,487 @@
+@@ -0,0 +1,490 @@
 +import React from 'react';
 +import {
 +  AbsoluteFill,
@@ -798,12 +798,15 @@ index 0000000..d91a479
 +        <Audio
 +          src={staticFile(`audio/music_${music}.wav`)}
 +          loop
-+          volume={(f) =>
-+            interpolate(f, [0, fps, durationInFrames - fps * 2, durationInFrames], [0, 0.14, 0.14, 0], {
++          volume={(f) => {
++            // keep the input range strictly increasing even for very short videos
++            const fadeIn = Math.min(fps, durationInFrames / 4);
++            const fadeOutStart = Math.max(fadeIn + 1, durationInFrames - fps * 2);
++            return interpolate(f, [0, fadeIn, fadeOutStart, durationInFrames], [0, 0.14, 0.14, 0], {
 +              extrapolateLeft: 'clamp',
 +              extrapolateRight: 'clamp',
-+            })
-+          }
++            });
++          }}
 +        />
 +      ) : null}
 +    </AbsoluteFill>
@@ -957,10 +960,10 @@ index 02a98fc..a92cfa4 100644
      } catch (error) {
 diff --git a/server/tts.ts b/server/tts.ts
 new file mode 100644
-index 0000000..631cc19
+index 0000000..8f3286d
 --- /dev/null
 +++ b/server/tts.ts
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,111 @@
 +// Free text-to-speech route for your Remotion render server (no API key, no GPU).
 +// Uses the Microsoft Edge "Read Aloud" voices through the `msedge-tts` package.
 +//
@@ -971,7 +974,8 @@ index 0000000..631cc19
 +//                            registerTts(app);        // before app.listen(...)
 +//
 +// POST /tts  {"text": "...", "voice": "en-US-AndrewNeural"}
-+//   -> {"path": "/voice/<id>.mp3"}   (the file is served from GET /voice/<id>.mp3)
++//   -> {"path": "/voice/<id>.mp3", "dataUrl": "data:audio/mpeg;base64,..."}
++//   (the file is also served from GET /voice/<id>.mp3)
 +//
 +// Note: this is Microsoft's unofficial, free endpoint. It works without a key but
 +// has no SLA and could change, so keep the voice generation behind this one route
@@ -1056,7 +1060,11 @@ index 0000000..631cc19
 +      await enqueue(() => synth(text, voice, file));
 +      const size = fs.statSync(file).size;
 +      if (size < 1000) throw new Error('empty audio returned');
-+      return res.json({path: `/voice/${id}.mp3`});
++      // Also return the clip itself as a data URL. On hosts whose disk is not shared
++      // between requests (Vercel, serverless), the render can then read the audio from
++      // its own request instead of fetching /voice/<id>.mp3 from another instance.
++      const dataUrl = 'data:audio/mpeg;base64,' + fs.readFileSync(file).toString('base64');
++      return res.json({path: `/voice/${id}.mp3`, dataUrl});
 +    } catch (e) {
 +      try {
 +        fs.unlinkSync(file);
